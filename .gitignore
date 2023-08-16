@@ -1,6 +1,7 @@
 Library/*
 !Library/readme.txt
 *.meta
+.vsconfig
 
 # This .gitignore file should be placed at the root of your Unity project directory
 #
