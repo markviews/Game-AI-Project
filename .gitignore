@@ -1,0 +1,6 @@
+
+Temp/
+Logs/
+.vs/
+Library/*
+!Library/readme.txt
