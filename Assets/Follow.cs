@@ -6,6 +6,11 @@ public class Follow : MonoBehaviour {
     public bool memory = true;
     public Transform player;
     public Transform target;
+    public VisibilityList visList;
+
+    void Start(){
+        visList = GameObject.Find("Pathfinding").GetComponent<VisibilityList>();
+    }
 
     void FixedUpdate() {
 
@@ -15,9 +20,7 @@ public class Follow : MonoBehaviour {
         }
 
         // Check if we have LOS to player
-        RaycastHit2D ray = Physics2D.Raycast(transform.position, player.position - transform.position);
-        bool seePlayer = ray.transform == player;
-        //Debug.DrawLine(transform.position, ray.point);
+        bool seePlayer = visList.isVisible(transform.position, player);
 
         if (seePlayer) {
             target.position = player.position;
