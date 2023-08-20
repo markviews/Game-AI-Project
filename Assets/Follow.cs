@@ -8,6 +8,11 @@ public class Follow : MonoBehaviour {
     public Transform target;
     public VisibilityList visList;
 
+    [Tooltip("How many fixedUpdates will pass between refreshes of the visibility list")]
+    //Turn this up if performance starts to suffer
+    public int visRefreshDelay = 10;
+    public int visRefreshCountdown = 0;
+
     void Start(){
         visList = GameObject.Find("Pathfinding").GetComponent<VisibilityList>();
     }
@@ -17,6 +22,12 @@ public class Follow : MonoBehaviour {
         if (memory == false) {
             target.position = player.position;
             return;
+        }
+
+        visRefreshCountdown -= 1;
+        if(visRefreshCountdown <= 0){
+            visList.generateVisLists(player);
+            visRefreshCountdown = visRefreshDelay;
         }
 
         // Check if we have LOS to player
