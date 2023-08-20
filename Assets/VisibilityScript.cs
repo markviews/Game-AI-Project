@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using Pathfinding;
 using System.ComponentModel;
-public class VisibilityList : MonoBehaviour
+public class VisibilityScript : MonoBehaviour
 {
     List<Vector3> visNodePositions;
     List<Vector3> hiddenNodePositions;
@@ -56,8 +56,38 @@ public class VisibilityList : MonoBehaviour
             } else {
                 hiddenNodePositions.Add(nodePos);
             }
+            string output = "";
+            foreach(PropertyDescriptor descriptor in TypeDescriptor.GetProperties(node)){
+                string name = descriptor.Name;
+                object value = descriptor.GetValue(node);
+                output += (name + '=' + value + "\n");
+            }
+            Debug.Log(output);
         });
     } 
+
+    public Vector3 closestNodeLoc(List<Vector3> nodePositions, Vector3 target){
+        if (nodePositions == null || nodePositions.Count == 0)
+        {
+            Debug.Log("Vector list cannot be null or empty.");
+            return target;
+        }
+
+        Vector3 closestVector = nodePositions[0];
+        float closestDistance = Vector3.Distance(closestVector, target);
+
+        for (int i = 1; i < nodePositions.Count; i++)
+        {
+            float distance = Vector3.Distance(nodePositions[i], target);
+            if (distance < closestDistance)
+            {
+                closestDistance = distance;
+                closestVector = nodePositions[i];
+            }
+        }
+
+        return closestVector;
+    }
 
     //----- Include this code in GetNodes to print data regarding the node -----
     // string output = "";
