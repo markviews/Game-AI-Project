@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -5,14 +6,11 @@ using Pathfinding;
 using System.ComponentModel;
 public class VisibilityScript : MonoBehaviour
 {
-    List<Vector3> visNodePositions;
-    List<Vector3> hiddenNodePositions;
     GridGraph gg;
+    public bool debugMode = false;
 
     void Start(){
         gg = AstarPath.active.data.gridGraph;
-        visNodePositions = new List<Vector3>();
-        hiddenNodePositions = new List<Vector3>();
     }
 
     public bool isVisible(Vector3 target, Transform eye){
@@ -22,28 +20,10 @@ public class VisibilityScript : MonoBehaviour
         return seePoint;
     }
 
-    void OnDrawGizmosSelected(){
-        // Draw a small yellow sphere at each visible point
-        if(Application.isPlaying){
-            if(visNodePositions != null){
-                Gizmos.color = Color.yellow;
-                foreach(Vector3 nodePos in visNodePositions){
-                    Gizmos.DrawSphere(nodePos, 0.1f);
-                }
-            }
-            if(hiddenNodePositions != null){
-                Gizmos.color = Color.white;
-                foreach(Vector3 nodePos in hiddenNodePositions){
-                    Gizmos.DrawSphere(nodePos, 0.1f);
-                }
-            }
-        }
-    }
-
-    public void generateVisLists(Transform eye){
+    public (List<Vector3>, List<Vector3>) generateVisLists(Transform eye){
         //Generates a list of nodes visible to eye
-        visNodePositions.Clear();
-        hiddenNodePositions.Clear();
+        List<Vector3> visNodePositions = new List<Vector3>();
+        List<Vector3> hiddenNodePositions = new List<Vector3>();
         gg.GetNodes(node => {
             // Here is a node
             Vector3 nodePos = (Vector3)node.position;
@@ -56,29 +36,32 @@ public class VisibilityScript : MonoBehaviour
             } else {
                 hiddenNodePositions.Add(nodePos);
             }
-            string output = "";
-            foreach(PropertyDescriptor descriptor in TypeDescriptor.GetProperties(node)){
-                string name = descriptor.Name;
-                object value = descriptor.GetValue(node);
-                output += (name + '=' + value + "\n");
+            if(debugMode){
+                string output = "";
+                foreach(PropertyDescriptor descriptor in TypeDescriptor.GetProperties(node)){
+                    string name = descriptor.Name;
+                    object value = descriptor.GetValue(node);
+                    output += (name + '=' + value + "\n");
+                }
+                Debug.Log(output);
             }
-            Debug.Log(output);
         });
+        return (visNodePositions, hiddenNodePositions);
     } 
 
-    public Vector3 closestNodeLoc(List<Vector3> nodePositions, Vector3 target){
+    public Vector3 closestNodeLoc(List<Vector3> nodePositions, Vector3 startPoint){
         if (nodePositions == null || nodePositions.Count == 0)
         {
             Debug.Log("Vector list cannot be null or empty.");
-            return target;
+            return startPoint;
         }
 
         Vector3 closestVector = nodePositions[0];
-        float closestDistance = Vector3.Distance(closestVector, target);
+        float closestDistance = 100000;
 
         for (int i = 1; i < nodePositions.Count; i++)
         {
-            float distance = Vector3.Distance(nodePositions[i], target);
+            float distance = Math.Abs(nodePositions[i].x - startPoint.x) + Math.Abs(nodePositions[i].y - startPoint.y);
             if (distance < closestDistance)
             {
                 closestDistance = distance;
@@ -87,6 +70,14 @@ public class VisibilityScript : MonoBehaviour
         }
 
         return closestVector;
+    }
+
+    public Vector3 closestHiddenNode(Vector3 startPoint, Transform eye){
+        //Finds the closest node to startPoint that is not visible to eye
+        List<Vector3> visNodePositions = new List<Vector3>();
+        List<Vector3> hiddenNodePositions = new List<Vector3>();
+        (visNodePositions, hiddenNodePositions) = generateVisLists(eye);
+        return closestNodeLoc(hiddenNodePositions, startPoint);
     }
 
     //----- Include this code in GetNodes to print data regarding the node -----
