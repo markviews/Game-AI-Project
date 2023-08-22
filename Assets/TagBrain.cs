@@ -10,8 +10,14 @@ public class TagBrain : MonoBehaviour
     public int freezeDuration = 50;
     public int freezeRemaining;
     private Rigidbody2D rb;
+    private SpriteRenderer itLabel;
 
-    public void Start(){ rb = gameObject.GetComponent<Rigidbody2D>(); rb.constraints = RigidbodyConstraints2D.FreezeRotation; }
+    public void Start(){ 
+        rb = gameObject.GetComponent<Rigidbody2D>(); 
+        rb.constraints = RigidbodyConstraints2D.FreezeRotation; 
+        itLabel = gameObject.transform.Find("ItLabel").GetComponent<SpriteRenderer>();
+        if(currentlyIt){ itLabel.enabled = true; } else { itLabel.enabled = false; }
+    }
     public void FixedUpdate(){
         if(freezeRemaining > 0){
             freezeRemaining--;
@@ -31,12 +37,14 @@ public class TagBrain : MonoBehaviour
             if(currentlyIt && freezeRemaining <= 0){
                 otherPlayerBrain.getTagged();
                 currentlyIt = false;
+                itLabel.enabled = false;
             }
         }
     }
 
     public void getTagged(){
         currentlyIt = true;
+        itLabel.enabled = true;
         freezeRemaining = freezeDuration;
         rb.constraints = RigidbodyConstraints2D.FreezeAll;
     }

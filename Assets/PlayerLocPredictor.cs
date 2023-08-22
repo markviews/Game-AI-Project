@@ -7,26 +7,26 @@ public class PlayerLocPredictor : MonoBehaviour
     public Transform player;
     public VisibilityScript visScript;
     public Vector3 predictedPos;
-    private BoxCollider2D boxCol;
+    private CircleCollider2D circleCol;
 
     // Start is called before the first frame update
     void Start()
     {
         predictedPos = new Vector3();
-        boxCol = gameObject.GetComponent<BoxCollider2D>();
+        circleCol = gameObject.GetComponent<CircleCollider2D>();
     }
 
     // Update is called once per frame
     void Update()
     {
-        boxCol.enabled = false;
+        circleCol.enabled = false;
         if(visScript.isVisible(transform.position, player)){
             //Debug.Log("I can see the player!");
             predictedPos = player.position;
-            boxCol.enabled = true;
+            circleCol.enabled = true;
             return;
         }
-        boxCol.enabled = true;
+        circleCol.enabled = true;
 
         predictedPos = visScript.closestHiddenNode(predictedPos, gameObject.transform);
     }
