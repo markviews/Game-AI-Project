@@ -19,5 +19,4 @@ public class PlayerMovement : MonoBehaviour {
     void FixedUpdate() {
         rb.velocity = new Vector2(moveDir.x * speed, moveDir.y * speed);
     }
-
 }
