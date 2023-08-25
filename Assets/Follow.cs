@@ -1,3 +1,4 @@
+using Pathfinding;
 using System.Collections;
 using System.Collections.Generic;
 using Unity.VisualScripting;
@@ -38,14 +39,37 @@ public class Follow : MonoBehaviour {
             visRefreshCountdown = visRefreshDelay;
         }
 
-        target.position = playerPredictor.predictedPos;
+        target.position = visScript.furthestHiddenNode(playerPredictor.predictedPos, target);
     }
-    
+
     void OnDrawGizmosSelected(){
         // Draw a small yellow sphere at each visible point
         if(!debugMode){ return; }
         if(Application.isPlaying){
-            if(visNodePositions != null){
+            AstarData data = AstarPath.active.data;
+
+            // Assuming you are using a grid graph; change as per your graph type
+            GridGraph gridGraph = data.gridGraph;
+
+            if (gridGraph != null)
+            { 
+                // Iterate over all nodes in the grid graph
+                gridGraph.GetNodes(node =>
+                {
+                    if (!node.Walkable){
+                        return true;
+                    }
+                    // Debug log to show node info
+                    Debug.Log("Node Penalty: " + node.Penalty);
+                    Gizmos.color = Color.Lerp(Color.white, Color.black, node.Penalty);
+                    Gizmos.DrawSphere((Vector3)node.position, 0.1f);
+
+                    return true; // Continue iteration
+                });
+
+                // Further processing with allNodes if necessary
+            }
+            /*if (visNodePositions != null){
                 Gizmos.color = Color.yellow;
                 foreach(Vector3 nodePos in visNodePositions){
                     Gizmos.DrawSphere(nodePos, 0.1f);
@@ -56,7 +80,7 @@ public class Follow : MonoBehaviour {
                 foreach(Vector3 nodePos in hiddenNodePositions){
                     Gizmos.DrawSphere(nodePos, 0.1f);
                 }
-            }
+            }*/
         }
     }
 }
