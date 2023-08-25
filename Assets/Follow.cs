@@ -54,18 +54,18 @@ public class Follow : MonoBehaviour {
             if (gridGraph != null)
             { 
                 // Iterate over all nodes in the grid graph
-                gridGraph.GetNodes(node =>
-                {
-                    if (!node.Walkable){
-                        return true;
-                    }
-                    // Debug log to show node info
-                    Debug.Log("Node Penalty: " + node.Penalty);
-                    Gizmos.color = Color.Lerp(Color.white, Color.black, node.Penalty);
-                    Gizmos.DrawSphere((Vector3)node.position, 0.1f);
+                // gridGraph.GetNodes(node =>
+                // {
+                //     if (!node.Walkable){
+                //         return true;
+                //     }
+                //     // Debug log to show node info
+                //     // Debug.Log("Node Penalty: " + node.Penalty);
+                //     // Gizmos.color = Color.Lerp(Color.white, Color.black, node.Penalty);
+                //     // Gizmos.DrawSphere((Vector3)node.position, 0.1f);
 
-                    return true; // Continue iteration
-                });
+                //     return true; // Continue iteration
+                // });
 
                 // Further processing with allNodes if necessary
             }
