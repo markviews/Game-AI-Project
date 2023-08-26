@@ -62,6 +62,68 @@ namespace Pathfinding {
 		/// </summary>
 		protected uint flags;
 
+		public bool playerCouldBeHere = false;
+		public int turnsPossible = 0; //Number of iterations that playerCouldBeHere has been true
+		public bool visible = false;
+		public bool playerFlag = false; //Used to update playerCouldBeHere in steps
+
+		public int numConnections(){
+			int counter = 0;
+			GetConnections(neighbor => { counter++; });
+			return counter;
+		}
+
+		public int numVisibleNeighbors(){
+			int counter = 0;
+			GetConnections(neighbor => {
+				if(neighbor.visible) counter++;
+            });
+			return counter;
+    	}
+
+		public void propogatePossibility(){
+			//-For hidden nodes that the player could have reached, update the neighbors they could have gone to
+			//-This will be called on fixedUpdates exactly as often as the time it takes to travel from one
+			//node to the next, so we can just update the neighbors without accounting for time
+			if(!playerCouldBeHere) { /*Debug.Log("Player could not be here");*/ return; } 
+			if(visible) 		   { playerCouldBeHere = false; /*Debug.Log("Visible");*/ return; }
+			//Debug.Log("Propogating node at " + (Vector3)position);
+			turnsPossible += 1;
+			GetConnections(neighbor => {
+				if(!neighbor.visible) {
+					neighbor.playerFlag = true;
+				}
+            }); 
+		}
+		public void propogateConfirm(){
+			if(playerFlag) { playerCouldBeHere = true; playerFlag = false; }
+		}
+
+		public void visualize(){
+			float duration = 0.13f;
+			if(!playerCouldBeHere) { return; }
+			//Debug.Log("Visualize: Player could be here, at " + (Vector3)position);
+			//Draw an X on the node itself
+			DrawX((Vector3)position, duration);
+			//Draw lines to each connected potential node
+			GetConnections(neighbor => {
+				if(neighbor.playerCouldBeHere){
+					Debug.DrawLine((Vector3)position, (Vector3)neighbor.position, Color.white, duration);
+				}
+			});
+		}
+		
+		public void DrawX(Vector3 location, float duration){
+			//This doesn't need to go in here I just only use it here for now
+			float xSize = 0.1f;
+			Vector3 topLeft  = location + new Vector3(-xSize,  xSize, 0);
+			Vector3 botLeft  = location + new Vector3(-xSize, -xSize, 0);
+			Vector3 topRight = location + new Vector3( xSize,  xSize, 0);
+			Vector3 botRight = location + new Vector3( xSize, -xSize, 0);
+			Debug.DrawLine(topLeft, botRight, Color.white, duration);
+			Debug.DrawLine(topRight, botLeft, Color.white, duration);
+		}
+
 #if !ASTAR_NO_PENALTY
 		/// <summary>
 		/// Penalty cost for walking on this node.
