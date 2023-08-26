@@ -14,6 +14,7 @@ public class PlayerLocPredictor : MonoBehaviour
     private float updateFreq = 0.5f; //MEASURED IN SECONDS
     private float updateCountdown = 0.5f;
 
+
     // Start is called before the first frame update
     void Start()
     {
@@ -57,8 +58,6 @@ public class PlayerLocPredictor : MonoBehaviour
 
 
 
-
-
     //This internal class holds information about where the player could possibly be given their last known location and time
     //There's only one of these per PlayerLocPredictor, so this doesn't really have to be its own class, but this felt like it made the most sense
     private class LocationTree {
@@ -75,11 +74,11 @@ public class PlayerLocPredictor : MonoBehaviour
         public LocationTree(Transform tf, VisibilityScript vs){
             transform = tf;
             visScript = vs;
-            lastKnownLoc = new LocationNode(new Vector3(), null);
+            lastKnownLoc = new LocationNode(new Vector3(), null, Vector3.zero);
             timeLastSeen = 0.0f;
             leaves = new List<LocationNode>();
             directions = new List<Vector3>() { 
-                new Vector3(0, 0, 0),
+                Vector3.zero,
                 new Vector3(0, 1, 0), new Vector3(0, -1, 0), new Vector3(-1, 0, 0), new Vector3(1, 0, 0), //Up down left right
                 new Vector3(0.7071f, 0.7071f, 0), new Vector3(-0.7071f, 0.7071f, 0), new Vector3(0.7071f, -0.7071f, 0), new Vector3(-0.7071f, -0.7071f, 0) //Diagonals
             };
@@ -91,15 +90,17 @@ public class PlayerLocPredictor : MonoBehaviour
             //Probability will have to take into account whether player is It/Not-It
             //Branches represent paths that the player might have taken
             public Vector3 location;
-            public double probability;
+            public float probability;
             public List<LocationNode> children;
             public LocationNode parent;
+            public Vector3 parentDir;
 
-            public LocationNode(Vector3 loc, LocationNode par){ 
+            public LocationNode(Vector3 loc, LocationNode par, Vector3 parDir){ 
                 location = loc; 
-                probability = 1.0f; 
+                probability = 100.0f; 
                 children = new List<LocationNode>();
                 parent = par;
+                parentDir = parDir;
             }
         }
 
@@ -109,7 +110,11 @@ public class PlayerLocPredictor : MonoBehaviour
             foreach(LocationNode leaf in leaves){
                 //Expands a leaf node (possible location) with up to 9 child nodes representing directions the player might have gone in deltaTime
                 leavesToRemove.Add(leaf);
+                if(leaf.probability < 1)
+
                 foreach (Vector3 dir in directions){
+                    if(dir == leaf.parentDir && dir != Vector3.zero) { continue; }
+
                     Vector3 newLoc = leaf.location + dir * playerSpeed * deltaTime;
 
                     //Don't create a new leaf if it involves running into a wall
@@ -117,10 +122,19 @@ public class PlayerLocPredictor : MonoBehaviour
                     if(ranIntoSomething){ continue; }
                     LocationNode newLeaf = new LocationNode(
                         newLoc,
-                        leaf
-                    ); 
+                        leaf,
+                        -dir
+                    );
                     leaf.children.Add(newLeaf);
                     leavesToAdd.Add(newLeaf);
+                }
+                
+                float probChunk = leaf.probability / (leaf.children.Count + 1); //Divide the probability of the current node into chunks to be distributed (unevenly) to the children 
+                foreach(LocationNode child in leaf.children){
+                    child.probability = probChunk;
+                }
+                if(leaf.parent != null){
+                    leaf.parent.probability += probChunk / 3;
                 }
             }
             foreach(LocationNode leaf in leavesToAdd)    { leaves.Add   (leaf); }
@@ -149,7 +163,7 @@ public class PlayerLocPredictor : MonoBehaviour
                 LocationNode curNode = (LocationNode)queue.Dequeue();
                 foreach(LocationNode child in curNode.children){
                     queue.Enqueue(child);
-                    Debug.DrawLine(curNode.location, child.location, Color.white, 2);
+                    Debug.DrawLine(curNode.location, child.location, (Color.Lerp(Color.white, Color.black, child.probability / 100.0f)), 5f);
                 }
             }
         }
@@ -177,7 +191,7 @@ public class PlayerLocPredictor : MonoBehaviour
     
         public void clearTree(Vector3 realLoc){
             //Called when you can see the player
-            lastKnownLoc = new LocationNode(realLoc, null);
+            lastKnownLoc = new LocationNode(realLoc, null, Vector3.zero);
             timeLastSeen = Time.time;
             leaves.Clear();
             leaves.Add(lastKnownLoc);
@@ -201,4 +215,4 @@ foreach node
   }
   if node !visible {
     propogate 
-  }
+  }*/
