@@ -13,26 +13,36 @@ public class KeyPress : MonoBehaviour
     {
         if (Input.GetKeyDown("1"))
         {
-            if (Light1.activeSelf){
-                Debug.Log("Player view disabled");
-                Light1.SetActive(false);
-            }
-            else{
-                Debug.Log("Player view enabled");
-                Light1.SetActive(true);
-            }
+            Light1.SetActive(true);
+            Light2.SetActive(false);
+            // if (Light1.activeSelf){
+            //     Debug.Log("Player view disabled");
+            //     Light1.SetActive(false);
+            // }
+            // else{
+            //     Debug.Log("Player view enabled");
+            //     Light1.SetActive(true);
+            // }
         }
 
         if (Input.GetKeyDown("2"))
         {
-            if (Light2.activeSelf){
-                Debug.Log("Bot view disabled");
-                Light2.SetActive(false);
-            }
-            else{
-                Debug.Log("Bot view enabled");
-                Light2.SetActive(true);
-            }
+            Light1.SetActive(false);
+            Light2.SetActive(true);
+            // if (Light2.activeSelf){
+            //     Debug.Log("Bot view disabled");
+            //     Light2.SetActive(false);
+            // }
+            // else{
+            //     Debug.Log("Bot view enabled");
+            //     Light2.SetActive(true);
+            // }
+        }
+
+        if (Input.GetKeyDown("3"))
+        {
+            Light1.SetActive(false);
+            Light2.SetActive(false);
         }
     }
 }
