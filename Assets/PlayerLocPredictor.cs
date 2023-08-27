@@ -11,10 +11,6 @@ public class PlayerLocPredictor : MonoBehaviour
     public Vector3 predictedPos;
     private CircleCollider2D circleCol;
     
-    // private LocationTree predictionTree;
-    // private float updateFreq = 0.5f; //MEASURED IN SECONDS
-    // private float updateCountdown = 0.5f;
-
     //This is a measure of approximately how many fixedUpdates it takes for a player to move the distance
     //between graphNodes. This determines how often we propogate his possible positions when we can't see him
     private int fixed_updates_btwn_nodes; 
@@ -31,8 +27,7 @@ public class PlayerLocPredictor : MonoBehaviour
         predictedPos = new Vector3();
         //We need to be able to turn the collider off when we cast rays at the player so the rays don't hit ourselves
         circleCol = gameObject.GetComponent<CircleCollider2D>();
-        //predictionTree = new LocationTree(gameObject.transform, visScript);
-
+       
         float playerSpeed = GameObject.Find("player").GetComponent<PlayerMovement>().speed;
         float distBtwNodes = gg.nodeSize;
         float nodesPerSec =  playerSpeed / distBtwNodes;
@@ -70,6 +65,7 @@ public class PlayerLocPredictor : MonoBehaviour
             GraphNode graphStart = closestHiddenNode(predictedPos);
             graphStart.playerCouldBeHere = true;
             node_travel_countdown = 0;
+            Debug.Log("Setting graph start to " + (Vector3)graphStart.position);
         }
         canSeePlayer = false;
 
@@ -77,14 +73,22 @@ public class PlayerLocPredictor : MonoBehaviour
         if(node_travel_countdown <= 0){
             updateNodes();
             node_travel_countdown = fixed_updates_btwn_nodes;
-            predictedPos = getBestSpotToLook();
+            Vector3 bestSpot = getBestSpotToLook();
+            if(bestSpot == Vector3.zero){
+                predictedPos = visScript.closestHiddenNodeLoc(predictedPos, gameObject.transform);
+            } else {
+                predictedPos = getBestSpotToLook();
+            }
         }
 
         if(Input.GetKeyDown(KeyCode.P)){
             updateNodes();
         } 
 
-        //predictedPos = visScript.closestHiddenNodeLoc(predictedPos, gameObject.transform);
+        if(Input.GetKeyDown(KeyCode.O)){
+            AIPath enemyPathfinder = GameObject.Find("enemy").GetComponent<AIPath>();
+            enemyPathfinder.canMove = true;
+        }
     }
 
     Vector3 getBestSpotToLook(){
@@ -98,12 +102,17 @@ public class PlayerLocPredictor : MonoBehaviour
         gg.GetNodes(node => {
             if(!node.Walkable || node.visible || !node.playerCouldBeHere){ return; }
             float curDist = Vector3.Distance((Vector3)node.position, transform.position);
-            if(curDist < distance && node.turnsPossible > longestSpot * 0.8){
+            if(curDist < distance && node.turnsPossible >= (float)((float)longestSpot * 0.8f)){
                 nearest = node;
                 distance = curDist;
             }
         });
-        return (Vector3)nearest.position;
+        if(nearest != null){
+            return (Vector3)nearest.position;
+        } else {
+            Debug.Log("Equals null!!!");
+            return Vector3.zero;
+        }
     }
 
     void updateNodes(){
@@ -125,6 +134,7 @@ public class PlayerLocPredictor : MonoBehaviour
                 distance = curDist;
             }
         });
+        //if(closest == null) { Debug.Log ("XXXXXXXXXXXXXX Closest is null!"); }
         return closest;
     }
 
