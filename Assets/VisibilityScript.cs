@@ -83,6 +83,35 @@ public class VisibilityScript : MonoBehaviour
         return closestNodeLoc(hiddenNodePositions, startPoint);
     }
 
+    public Vector3 furthestNodeLoc(List<Vector3> nodePositions, Vector3 startPoint)
+    {
+        if (nodePositions == null || nodePositions.Count == 0)
+        {
+            return startPoint;
+        }
+
+        Vector3 furthestVector = nodePositions[0];
+        float furthestDistance = 0;
+        for (int i = 1; i< nodePositions.Count; i++)
+        {
+            float distance = Math.Abs(nodePositions[i].x - startPoint.x) + Math.Abs(nodePositions[i].y - startPoint.y);
+            if (distance > furthestDistance)
+            {
+                furthestDistance = distance;
+                furthestVector = nodePositions[i];
+            }
+        }
+        return furthestVector;
+    }
+
+    public Vector3 furthestHiddenNode(Vector3 startPoint, Transform eye)
+    {
+        List<Vector3> VNodePositions = new List<Vector3>();
+        List<Vector3> HNodePositions = new List<Vector3>();
+        (VNodePositions, HNodePositions) = generateVisLists(eye);
+        return furthestNodeLoc(HNodePositions, startPoint);
+    }
+
     // public GraphNode closestHiddenNode(Vector3 startPoint){
     //     GraphNode closest = null;
     //     float distance = Single.PositiveInfinity;

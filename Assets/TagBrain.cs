@@ -11,10 +11,8 @@ public class TagBrain : MonoBehaviour
     public int freezeRemaining;
     private Rigidbody2D rb;
     private SpriteRenderer itLabel;
-    //private GameObject Light1;
 
     public void Start(){ 
-        //Light1 = gameObject.transform.GetChild(1).gameObject;
         rb = gameObject.GetComponent<Rigidbody2D>(); 
         rb.constraints = RigidbodyConstraints2D.FreezeRotation; 
         itLabel = gameObject.transform.Find("ItLabel").GetComponent<SpriteRenderer>();
@@ -36,12 +34,10 @@ public class TagBrain : MonoBehaviour
         {
             TagBrain otherPlayerBrain = other.gameObject.GetComponent<TagBrain>();
             
-
             if(currentlyIt && freezeRemaining <= 0){
                 otherPlayerBrain.getTagged();
                 currentlyIt = false;
                 itLabel.enabled = false;
-                //Light1.SetActive(false);
             }
         }
     }
@@ -51,6 +47,5 @@ public class TagBrain : MonoBehaviour
         itLabel.enabled = true;
         freezeRemaining = freezeDuration;
         rb.constraints = RigidbodyConstraints2D.FreezeAll;
-        //Light1.SetActive(true);
     }
 }

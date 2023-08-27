@@ -1,3 +1,4 @@
+using Pathfinding;
 using System.Collections;
 using System.Collections.Generic;
 using Unity.VisualScripting;
@@ -39,6 +40,8 @@ public class Follow : MonoBehaviour {
         }
 
         target.position = playerPredictor.predictedPos;
+        //Abner's version:
+        //target.position = visScript.furthestHiddenNode(playerPredictor.predictedPos, target);
     }
     
     void OnDrawGizmosSelected(){
