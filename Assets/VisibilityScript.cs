@@ -33,8 +33,11 @@ public class VisibilityScript : MonoBehaviour
             }
             if(isVisible(nodePos, eye)){
                 visNodePositions.Add(nodePos);
+                node.visible = true;
+                node.turnsPossible = 0;
             } else {
                 hiddenNodePositions.Add(nodePos);
+                node.visible = false;
             }
             if(debugMode){
                 string output = "";
@@ -72,13 +75,25 @@ public class VisibilityScript : MonoBehaviour
         return closestVector;
     }
 
-    public Vector3 closestHiddenNode(Vector3 startPoint, Transform eye){
+    public Vector3 closestHiddenNodeLoc(Vector3 startPoint, Transform eye){
         //Finds the closest node to startPoint that is not visible to eye
         List<Vector3> visNodePositions = new List<Vector3>();
         List<Vector3> hiddenNodePositions = new List<Vector3>();
         (visNodePositions, hiddenNodePositions) = generateVisLists(eye);
         return closestNodeLoc(hiddenNodePositions, startPoint);
     }
+
+    // public GraphNode closestHiddenNode(Vector3 startPoint){
+    //     GraphNode closest = null;
+    //     float distance = Single.PositiveInfinity;
+    //     gg.GetNodes(node => {
+    //         if(node.visible){ return; }
+    //         if(Vector3.Distance(startPoint, (Vector3)node.position) < distance){
+    //             closest = node;
+    //         }
+    //     });
+    //     return closest;
+    // }
 
     //----- Include this code in GetNodes to print data regarding the node -----
     // string output = "";
