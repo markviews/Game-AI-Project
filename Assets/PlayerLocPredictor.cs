@@ -7,6 +7,7 @@ using Pathfinding;
 public class PlayerLocPredictor : MonoBehaviour
 {
     public Transform player;
+    public Transform predictionMarker;
     public VisibilityScript visScript;
     public Vector3 predictedPos;
     private CircleCollider2D circleCol;
@@ -19,12 +20,17 @@ public class PlayerLocPredictor : MonoBehaviour
     private GridGraph gg;
 
     public bool canSeePlayer = false;
+    public float ageThreshold;
+    public float itAgeThresh = 0.8f;
+    public float notItAgeThresh = 0.0f;
 
     // Start is called before the first frame update
     void Start()
     {
+        ageThreshold = itAgeThresh;
         gg = AstarPath.active.data.gridGraph;
         predictedPos = new Vector3();
+        predictionMarker = GameObject.Find("Prediction_Marker").transform;
         //We need to be able to turn the collider off when we cast rays at the player so the rays don't hit ourselves
         circleCol = gameObject.GetComponent<CircleCollider2D>();
        
@@ -47,6 +53,7 @@ public class PlayerLocPredictor : MonoBehaviour
                 Debug.Log("Gained sight of the player!");
             }
             predictedPos = player.position;
+            predictionMarker.position = predictedPos;
             circleCol.enabled = true;
             canSeePlayer = true;
 
@@ -79,12 +86,15 @@ public class PlayerLocPredictor : MonoBehaviour
             } else {
                 predictedPos = getBestSpotToLook();
             }
+            predictionMarker.position = predictedPos;
         }
 
         if(Input.GetKeyDown(KeyCode.P)){
             updateNodes();
         } 
+    }
 
+    void Update(){ //This key check should go in AIPath but it didn't work when I put it in there and I don't have time to care
         if(Input.GetKeyDown(KeyCode.O)){
             AIPath enemyPathfinder = GameObject.Find("enemy").GetComponent<AIPath>();
             enemyPathfinder.canMove = true;
@@ -102,7 +112,7 @@ public class PlayerLocPredictor : MonoBehaviour
         gg.GetNodes(node => {
             if(!node.Walkable || node.visible || !node.playerCouldBeHere){ return; }
             float curDist = Vector3.Distance((Vector3)node.position, transform.position);
-            if(curDist < distance && node.turnsPossible >= (float)((float)longestSpot * 0.8f)){
+            if(curDist < distance && node.turnsPossible >= (float)((float)longestSpot * ageThreshold)){
                 nearest = node;
                 distance = curDist;
             }
@@ -118,9 +128,7 @@ public class PlayerLocPredictor : MonoBehaviour
     void updateNodes(){
         gg.GetNodes(node => { node.propogatePossibility(); });
         gg.GetNodes(node => { node.propogateConfirm(); });
-        gg.GetNodes(node => {
-            node.visualize();
-        });
+        gg.GetNodes(node => { node.visualize(); });
     }
 
     public GraphNode closestHiddenNode(Vector3 startPoint){

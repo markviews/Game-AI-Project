@@ -13,6 +13,8 @@ public class Follow : MonoBehaviour {
     List<Vector3> visNodePositions;
     List<Vector3> hiddenNodePositions;
     public PlayerLocPredictor playerPredictor;
+    public TagBrain tagBrain;
+    public bool wasIt;
 
     public bool debugMode = true;
 
@@ -21,9 +23,13 @@ public class Follow : MonoBehaviour {
     public int visRefreshDelay = 10;
     public int visRefreshCountdown = 0;
 
+    public int hidingRefreshDelay = 30;
+    public int hidingRefreshCountdown = 0;
+
     void Start(){
         visScript = GameObject.Find("Pathfinding").GetComponent<VisibilityScript>();
         playerPredictor = gameObject.GetComponent<PlayerLocPredictor>();
+        wasIt = tagBrain.currentlyIt;
     }
 
     void FixedUpdate() {
@@ -39,9 +45,20 @@ public class Follow : MonoBehaviour {
             visRefreshCountdown = visRefreshDelay;
         }
 
-        target.position = playerPredictor.predictedPos;
-        //Abner's version:
-        //target.position = visScript.furthestHiddenNode(playerPredictor.predictedPos, target);
+        if(tagBrain.currentlyIt){
+            wasIt = true;
+            playerPredictor.ageThreshold = playerPredictor.itAgeThresh;
+            target.position = playerPredictor.predictedPos;
+        } else {
+            if(wasIt){ hidingRefreshCountdown = 0; }
+            wasIt = false;
+            hidingRefreshCountdown--;
+            if(hidingRefreshCountdown <= 0){
+                hidingRefreshCountdown = hidingRefreshDelay;
+                playerPredictor.ageThreshold = playerPredictor.notItAgeThresh;
+                target.position = visScript.furthestHiddenNode(playerPredictor.predictedPos, playerPredictor.predictionMarker, transform);
+            }
+        }
     }
     
     void OnDrawGizmosSelected(){

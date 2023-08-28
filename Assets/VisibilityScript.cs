@@ -104,11 +104,15 @@ public class VisibilityScript : MonoBehaviour
         return furthestVector;
     }
 
-    public Vector3 furthestHiddenNode(Vector3 startPoint, Transform eye)
+    public Vector3 furthestHiddenNode(Vector3 startPoint, Transform eye, Transform resetTf)
     {
         List<Vector3> VNodePositions = new List<Vector3>();
         List<Vector3> HNodePositions = new List<Vector3>();
+        CircleCollider2D coll = eye.gameObject.GetComponent<CircleCollider2D>();
+        if(coll != null) { coll.enabled = true; }
         (VNodePositions, HNodePositions) = generateVisLists(eye);
+        if(coll != null) { coll.enabled = false; }
+        generateVisLists(resetTf);
         return furthestNodeLoc(HNodePositions, startPoint);
     }
 
