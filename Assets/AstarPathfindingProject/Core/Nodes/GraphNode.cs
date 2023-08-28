@@ -20,7 +20,7 @@ namespace Pathfinding {
 		/// Side of the node shape which this connection uses.
 		/// Used for mesh nodes.
 		/// A value of 0 corresponds to using the side for vertex 0 and vertex 1 on the node. 1 corresponds to vertex 1 and 2, etc.
-		/// A negative value means that this connection does not use any side at all (this is mostly used for off-mesh links).
+		/// A value of <see cref="NoSharedEdge"/> means that this connection does not use any side at all (this is mostly used for off-mesh links).
 		///
 		/// Note: Due to alignment, the <see cref="node"/> and <see cref="cost"/> fields use 12 bytes which will be padded
 		/// to 16 bytes when used in an array even if this field would be removed.
@@ -31,7 +31,9 @@ namespace Pathfinding {
 		/// </summary>
 		public byte shapeEdge;
 
-		public Connection (GraphNode node, uint cost, byte shapeEdge = 0xFF) {
+		public const byte NoSharedEdge = 0xFF;
+
+		public Connection (GraphNode node, uint cost, byte shapeEdge = NoSharedEdge) {
 			this.node = node;
 			this.cost = cost;
 			this.shapeEdge = shapeEdge;
@@ -61,68 +63,6 @@ namespace Pathfinding {
 		/// See: Tag
 		/// </summary>
 		protected uint flags;
-
-		public bool playerCouldBeHere = false;
-		public int turnsPossible = 0; //Number of iterations that playerCouldBeHere has been true
-		public bool visible = false;
-		public bool playerFlag = false; //Used to update playerCouldBeHere in steps
-
-		public int numConnections(){
-			int counter = 0;
-			GetConnections(neighbor => { counter++; });
-			return counter;
-		}
-
-		public int numVisibleNeighbors(){
-			int counter = 0;
-			GetConnections(neighbor => {
-				if(neighbor.visible) counter++;
-            });
-			return counter;
-    	}
-
-		public void propogatePossibility(){
-			//-For hidden nodes that the player could have reached, update the neighbors they could have gone to
-			//-This will be called on fixedUpdates exactly as often as the time it takes to travel from one
-			//node to the next, so we can just update the neighbors without accounting for time
-			if(!playerCouldBeHere) { /*Debug.Log("Player could not be here");*/ return; } 
-			if(visible) 		   { playerCouldBeHere = false; /*Debug.Log("Visible");*/ return; }
-			//Debug.Log("Propogating node at " + (Vector3)position);
-			turnsPossible += 1;
-			GetConnections(neighbor => {
-				if(!neighbor.visible) {
-					neighbor.playerFlag = true;
-				}
-            }); 
-		}
-		public void propogateConfirm(){
-			if(playerFlag) { playerCouldBeHere = true; playerFlag = false; }
-		}
-
-		public void visualize(){
-			float duration = 0.13f;
-			if(!playerCouldBeHere) { return; }
-			//Debug.Log("Visualize: Player could be here, at " + (Vector3)position);
-			//Draw an X on the node itself
-			DrawX((Vector3)position, duration);
-			//Draw lines to each connected potential node
-			GetConnections(neighbor => {
-				if(neighbor.playerCouldBeHere){
-					Debug.DrawLine((Vector3)position, (Vector3)neighbor.position, Color.white, duration);
-				}
-			});
-		}
-		
-		public void DrawX(Vector3 location, float duration){
-			//This doesn't need to go in here I just only use it here for now
-			float xSize = 0.1f;
-			Vector3 topLeft  = location + new Vector3(-xSize,  xSize, 0);
-			Vector3 botLeft  = location + new Vector3(-xSize, -xSize, 0);
-			Vector3 topRight = location + new Vector3( xSize,  xSize, 0);
-			Vector3 botRight = location + new Vector3( xSize, -xSize, 0);
-			Debug.DrawLine(topLeft, botRight, Color.white, duration);
-			Debug.DrawLine(topRight, botLeft, Color.white, duration);
-		}
 
 #if !ASTAR_NO_PENALTY
 		/// <summary>
@@ -712,7 +652,7 @@ namespace Pathfinding {
 		/// <param name="node">Node to add a connection to</param>
 		/// <param name="cost">Cost of traversing the connection. A cost of 1000 corresponds approximately to the cost of moving 1 world unit.</param>
 		public override void AddConnection (GraphNode node, uint cost) {
-			AddConnection(node, cost, -1);
+			AddConnection(node, cost, Connection.NoSharedEdge);
 		}
 
 		/// <summary>
@@ -727,8 +667,8 @@ namespace Pathfinding {
 		/// </summary>
 		/// <param name="node">Node to add a connection to</param>
 		/// <param name="cost">Cost of traversing the connection. A cost of 1000 corresponds approximately to the cost of moving 1 world unit.</param>
-		/// <param name="shapeEdge">Which edge on the shape of this node to use or -1 if no edge is used.</param>
-		public void AddConnection (GraphNode node, uint cost, int shapeEdge) {
+		/// <param name="shapeEdge">Which edge on the shape of this node to use or #Connection.NoSharedEdge if no edge is used.</param>
+		public void AddConnection (GraphNode node, uint cost, byte shapeEdge) {
 			if (node == null) throw new System.ArgumentNullException();
 
 			// Check if we already have a connection to the node
@@ -740,7 +680,7 @@ namespace Pathfinding {
 						// Update edge only if it was a definite edge, otherwise reuse the existing one
 						// This makes it possible to use the AddConnection(node,cost) overload to only update the cost
 						// without changing the edge which is required for backwards compatibility.
-						connections[i].shapeEdge = shapeEdge >= 0 ? (byte)shapeEdge : connections[i].shapeEdge;
+						connections[i].shapeEdge = shapeEdge != Connection.NoSharedEdge ? shapeEdge : connections[i].shapeEdge;
 						return;
 					}
 				}
