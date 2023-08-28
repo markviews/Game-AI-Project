@@ -7,17 +7,35 @@ public class TagBrain : MonoBehaviour
     [SerializeField]
     public bool currentlyIt;
     // How many fixedUpdates the agent will freeze when tagged
-    public int freezeDuration = 50;
+    private int freezeDuration = 250;
     public int freezeRemaining;
     private Rigidbody2D rb;
-    private SpriteRenderer itLabel;
+    private SpriteRenderer itLabel, mySprite;
+    public bool vizMode = false;
+    public bool isVisible = true; //Visible to the other 'player'
 
     public void Start(){ 
         rb = gameObject.GetComponent<Rigidbody2D>(); 
         rb.constraints = RigidbodyConstraints2D.FreezeRotation; 
         itLabel = gameObject.transform.Find("ItLabel").GetComponent<SpriteRenderer>();
+        mySprite = gameObject.GetComponent<SpriteRenderer>();
         if(currentlyIt){ itLabel.enabled = true; } else { itLabel.enabled = false; }
     }
+
+    public void Update(){
+        if(vizMode || isVisible) { //The game is currently set to our POV OR opponent can see us
+            mySprite.enabled = true; 
+            if(currentlyIt){ 
+                itLabel.enabled = true; 
+            } else { 
+                itLabel.enabled = false; 
+            }
+        } else {
+            mySprite.enabled = false;
+            itLabel.enabled = false;
+        }
+    }
+
     public void FixedUpdate(){
         if(freezeRemaining > 0){
             freezeRemaining--;

@@ -11,7 +11,9 @@ public class PlayerLocPredictor : MonoBehaviour
     public VisibilityScript visScript;
     public Vector3 predictedPos;
     private CircleCollider2D circleCol;
-    
+
+    private TagBrain playerTagBrain, enemyTagBrain;
+
     //This is a measure of approximately how many fixedUpdates it takes for a player to move the distance
     //between graphNodes. This determines how often we propogate his possible positions when we can't see him
     private int fixed_updates_btwn_nodes; 
@@ -24,6 +26,11 @@ public class PlayerLocPredictor : MonoBehaviour
     public float itAgeThresh = 0.8f;
     public float notItAgeThresh = 0.0f;
 
+    private PlayerMovement pMovement;
+    private float playerSpeed = 0f;
+
+    private AIPath enemyPathfinder;
+
     // Start is called before the first frame update
     void Start()
     {
@@ -34,7 +41,21 @@ public class PlayerLocPredictor : MonoBehaviour
         //We need to be able to turn the collider off when we cast rays at the player so the rays don't hit ourselves
         circleCol = gameObject.GetComponent<CircleCollider2D>();
        
-        float playerSpeed = GameObject.Find("player").GetComponent<PlayerMovement>().speed;
+        enemyPathfinder = gameObject.GetComponent<AIPath>();
+
+        playerTagBrain = GameObject.Find("player").GetComponent<TagBrain>();
+        enemyTagBrain  = gameObject.GetComponent<TagBrain>();
+
+        pMovement = GameObject.Find("player").GetComponent<PlayerMovement>();
+        calculateFUBN();
+        node_travel_countdown = fixed_updates_btwn_nodes;
+    }
+
+    void calculateFUBN(){
+        float pSpeed = pMovement.speed;
+        if(playerSpeed == pSpeed){ return; }
+
+        playerSpeed = pSpeed;
         float distBtwNodes = gg.nodeSize;
         float nodesPerSec =  playerSpeed / distBtwNodes;
         fixed_updates_btwn_nodes = (int)Math.Floor(50 / nodesPerSec);
@@ -42,7 +63,6 @@ public class PlayerLocPredictor : MonoBehaviour
             "\ndistBtwNodes = " + distBtwNodes +
             "\nnodesPerSec = " + nodesPerSec +
             "\nFUBN = " + fixed_updates_btwn_nodes);
-        node_travel_countdown = fixed_updates_btwn_nodes;
     }
 
     void FixedUpdate()
@@ -60,12 +80,19 @@ public class PlayerLocPredictor : MonoBehaviour
             gg.GetNodes(node => {
                 node.playerCouldBeHere = false;
             });
+
+            playerTagBrain.isVisible = true;
+            enemyTagBrain.isVisible = true;
+            
             return;
         }
         circleCol.enabled = true;
 
         //From this point on only runs if you cannot see the player
         
+        playerTagBrain.isVisible = false;
+        enemyTagBrain.isVisible = false;
+
         //If you could see the player last frame
         if(canSeePlayer){
             Debug.Log("Lost sight of the player!");
@@ -96,8 +123,13 @@ public class PlayerLocPredictor : MonoBehaviour
 
     void Update(){ //This key check should go in AIPath but it didn't work when I put it in there and I don't have time to care
         if(Input.GetKeyDown(KeyCode.O)){
-            AIPath enemyPathfinder = GameObject.Find("enemy").GetComponent<AIPath>();
             enemyPathfinder.canMove = true;
+        }
+
+        if(enemyTagBrain.currentlyIt){
+            enemyPathfinder.maxSpeed = 4;
+        } else {
+            enemyPathfinder.maxSpeed = 3.5f;
         }
     }
 

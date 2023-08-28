@@ -2,47 +2,74 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
+//This should be called Visualizer at this point but it's too late
 public class KeyPress : MonoBehaviour
 {
     [SerializeField]
-    private GameObject Light1;
+    private GameObject playerLight;
     [SerializeField]
-    private GameObject Light2;
-    
+    private GameObject enemyLight;
+    [SerializeField]
+    private TagBrain playerBrain;
+    [SerializeField]
+    private TagBrain enemyBrain;
+
+    [SerializeField]
+    private SpriteRenderer targetDot;
+    [SerializeField] 
+    private SpriteRenderer predictionDot;
+
+    //1 = player vision
+    //2 = enemy vision
+    //3 = both
+    public int visualMode = 1;
+
+    public bool showMarkers = true;
+
+    void Start(){
+        setVisMode1();
+    }
+
     void Update()
     {
         if (Input.GetKeyDown("1"))
         {
-            Light1.SetActive(true);
-            Light2.SetActive(false);
-            // if (Light1.activeSelf){
-            //     Debug.Log("Player view disabled");
-            //     Light1.SetActive(false);
-            // }
-            // else{
-            //     Debug.Log("Player view enabled");
-            //     Light1.SetActive(true);
-            // }
+            setVisMode1();
         }
 
         if (Input.GetKeyDown("2"))
         {
-            Light1.SetActive(false);
-            Light2.SetActive(true);
-            // if (Light2.activeSelf){
-            //     Debug.Log("Bot view disabled");
-            //     Light2.SetActive(false);
-            // }
-            // else{
-            //     Debug.Log("Bot view enabled");
-            //     Light2.SetActive(true);
-            // }
+            playerLight.SetActive(false);
+            enemyLight.SetActive(true);
+            visualMode = 2;
+            playerBrain.vizMode = false;
+            enemyBrain.vizMode = true;
+            showMarkers = true;
+            predictionDot.enabled = true;
+            targetDot.enabled = true;
         }
 
         if (Input.GetKeyDown("3"))
         {
-            Light1.SetActive(false);
-            Light2.SetActive(false);
+            playerLight.SetActive(false);
+            enemyLight.SetActive(false);
+            visualMode = 3;
+            playerBrain.vizMode = true;
+            enemyBrain.vizMode = true;
+            showMarkers = true;
+            predictionDot.enabled = true;
+            targetDot.enabled = true;
         }
+    }
+
+    void setVisMode1(){
+        playerLight.SetActive(true);
+        enemyLight.SetActive(false);
+        visualMode = 1;
+        playerBrain.vizMode = true;
+        enemyBrain.vizMode = false;
+        showMarkers = false;
+        predictionDot.enabled = false;
+        targetDot.enabled = false;
     }
 }
